@@ -1,0 +1,20 @@
+# CMake / Ninja presets (binaryDir = out/<preset>)
+out/
+
+# Flight logs from live experiments
+sessions/
+
+# MSVC / linker leftovers if a build is run outside out/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.lib
+*.exp
+
+# Local CMake and Visual Studio
+CMakeUserPresets.json
+.vs/
+CMakeSettings.json
+*.user

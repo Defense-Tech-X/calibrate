@@ -1,0 +1,15 @@
+* text=auto
+
+*.cpp text
+*.hpp text
+*.h text
+*.md text
+*.cmake text
+*.txt text
+*.json text
+*.ps1 text eol=crlf
+
+*.png binary
+*.exe binary
+*.pdb binary
+*.lib binary
