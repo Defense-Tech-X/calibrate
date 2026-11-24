@@ -10,7 +10,8 @@
 
 // Shared live takeoff to apex picture lock:
 //   Climb(liftoff) -> Clearance(liftoff, 1s) -> Coast(stopClimb) -> lock on apex.
-// Used by hover_trim, roll_pulse, pitch_pulse. Reset stays in ExperimentUtils.
+// Used by roll_pulse and pitch_pulse. hover_trim coasts at u_eq until speed
+// crosses zero, then raises kH with no ceiling. Reset stays in ExperimentUtils.
 namespace ApexClimb {
 
 inline constexpr uint64_t kClearanceUs = 1000000;

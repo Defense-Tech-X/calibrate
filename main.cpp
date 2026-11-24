@@ -23,7 +23,7 @@ void printUsage() {
         "Usage: calibrate <experiment>\n"
         "Live pipeline (run in order):\n"
         "  throttle_step      1) visual height/speed channel -> liftoff + stopClimb\n"
-        "  hover_trim         2) apex lock + cascade hold; still 5s -> hoverThrottle\n"
+        "  hover_trim         2) test active-model k_h for 5s at the locked apex\n"
         "  roll_pulse         3) hold altitude SoftCeil; measure rollHold* (no LAT)\n"
         "  pitch_pulse        4) hold altitude+LAT; measure pitch stick\n"
         "  validate_forecast  5) score ARX forecast; set appliedToControl\n"

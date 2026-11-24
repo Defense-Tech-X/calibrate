@@ -10,8 +10,8 @@
 // Altitude hold laws for calibrate pipeline.
 //
 // Pipeline roles:
-//   hover_trim   -> apex lock + AltitudePHold::stepCascade (SoftFloor+SoftCeil)
-//   roll_pulse   -> same cascade + SoftCeil while measuring rollHold*
+//   hover_trim   -> visual height lock + kH hunt (VerticalDynamics)
+//   roll_pulse   -> cascade + SoftCeil while measuring rollHold*
 //   pitch_pulse  -> same SoftCeil + LAT (LAT frozen during pitch pulse)
 //
 // Image Y down. Close screen gap to lock: dy>0 => CUT; dy<0 => ADD.

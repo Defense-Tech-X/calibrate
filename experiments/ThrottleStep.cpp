@@ -276,6 +276,9 @@ ExperimentResult ThrottleStepExperiment::run(ExperimentContext& context) {
         0,
         outputs);
     result.model.setVisionMotion(vision);
+    if (havePrior) {
+        result.model.setVertical(prior.vertical());
+    }
     if (result.ok) {
         StickCalibration sticks;
         sticks.liftoffThrottle = liftoffThr;

@@ -59,14 +59,22 @@ On the ground and below \(u_{lift}\), \(\dot v = 0\). After liftoff the balance 
 u = u_{eq} - \frac{k_h}{k_u}(h - h_{ref}) - \frac{k_v}{k_u} v
 \]
 
-\(k_u\) and \(k_v\) stay as above. The damping term is about 130 stick counts per px/s. \(k_h\) is still free: this flight never held a height, so the height gain is what `hover_trim` measures.
+\(k_u\) and \(k_v\) stay as above. The damping term is 132.5 stick counts per px/s. `hover_trim` tests the single \(k_h\) stored on the active model. After the apex lock that value stays fixed for 5 s, starting from rest at \(h_{ref}\). Staying inside \(\pm 0.5\,\mathrm{px}\) accepts it. Motion both above and below \(h_{ref}\) means decrease \(k_h\) and run the test again. Never rising above \(h_{ref}\) means increase \(k_h\) and run the test again.
+
+Repeated runs fixed \(k_h = 2.6907\). At \(2.6906\), three holds stayed below \(h_{ref}\). At \(2.6907\), one of three holds rose above \(h_{ref}\). With the coefficients already on the model, `holdThrottle` is
+
+\[
+u = 11210 - 672.675\,(h - h_{ref}) - 132.5\, v
+\]
+
+\(h\) and \(h_{ref}\) are pixels of the flight scale, \(v\) is px/s, and \(u\) is stick counts. \(672.675 = k_h / k_u = 2.6907 / 0.004\) counts per pixel of height error. \(132.5 = k_v / k_u = 0.53 / 0.004\) counts per px/s. \(11210\) is \(u_{eq}\) from `throttle_step`. This is the second coefficient written onto that same plant: \(u_{eq}\), \(k_u\), and \(k_v\) were already fixed, and `hover_trim` adds \(k_h\).
 
 Session files: `visual_channel.jsonl` (one hypothesis per cloud) and `visual_scale.json` (reference observation, normalization version, sensitivities, rejection and gap rules).
 
 | Step | Experiment | Uses prior | Measures / locks | Hold during measure |
 |---|---|---|---|---|
 | 1 | `throttle_step` | - | visual height and vertical speed hypothesis (px, px/s), plus quality and limits. Stores `liftoffThrottle` and `stopClimbThrottle` | raise until a clean climb hypothesis, dump, cut until a clean descent hypothesis |
-| 2 | `hover_trim` | liftoff + stopClimb | `hoverThrottle` + cascade gains | apex LOCK → cascade `vzCmd=-Kp·dy`, `thr=hover-Kv·(vz-vzCmd)` + I on hover; 5s still → avg thr |
+| 2 | `hover_trim` | \(u_{eq}\), \(u_{lift}\), \(k_u\), \(k_v\) | \(k_h\) | 1 s at \(u_{lift}\), coast at \(u_{eq}\) until \(v = 0\), then \(u = u_{eq} - (k_h/k_u)(h-h_{ref}) - (k_v/k_u)\,v\) |
 | 3 | `roll_pulse` | hover + stopClimb + cascade | `sticks.rollHoldStep` / `rollHoldMax`, ARX draft | shared `ApexClimb` then SoftCeil hold (no LAT - same axis as excite) |
 | 4 | `pitch_pulse` | hover + rollHold | pitch response / ARX draft | shared `ApexClimb` then SoftCeil + LAT P2 (LAT frozen during pulse) |
 | 5 | `validate_forecast` | ARX OK model | NRMSE on short roll pulse; `appliedToControl` | hover thr, one roll pulse |
@@ -77,8 +85,8 @@ Active model: `plant/models/active.json` (OK fit from roll/pitch is kept; sticks
 
 **Altitude** (`hold/AltitudeHold.hpp`):
 
-- Shared takeoff (`takeoff/ApexClimb.hpp`): reset → climb liftoff → **clearance 1.0s** → dump `stopClimb` → coast to apex lock. Used by `hover_trim`, `roll_pulse`, `pitch_pulse`.
-- `hover_trim`: apex lock → cascade hold; **5s still** → `hoverThrottle`.
+- Shared takeoff (`takeoff/ApexClimb.hpp`): reset → climb liftoff → **clearance 1.0s** → dump `stopClimb` → coast to apex lock. Used by `roll_pulse`, `pitch_pulse`.
+- `hover_trim`: 1 s at \(u_{lift}\) after the channel height is valid, then \(u_{eq}\) until speed crosses zero. That apex is \(h_{ref}\). The active model's \(k_h\) is held for 5 s from that point. A hold inside 0.5 px is accepted. Oscillation across \(h_{ref}\) means a smaller \(k_h\). Failure to rise above \(h_{ref}\) means a larger \(k_h\). `hoverThrottle` stays at \(u_{eq}\).
 - Pulse altitude hold (SoftCeil/SoftFloor): SoftCeil = above lock never ADD. Apex lock keeps `stopClimb` thr (no jump to measured hover); floor down to `stopClimb`. Cascade reference stays measured `hover`.
 
 **Lateral** (`hold/LateralHold.hpp`, pitch only): oppose drift - craft LEFT→roll+, RIGHT→roll−; gains from `rollHoldStep` (Kr/8, slew≤step/8) plus leaky `dx` bias, `latRate` clamp 3×holdRate, 2×Kx and faster trim when `|dx|` large. During pitch `pulse` phase `holdRoll` is frozen; trim resumes in hold/recover. Not used on `roll_pulse` (same stick axis as excitation).
@@ -89,7 +97,7 @@ Apex picture lock stays fixed during pulses (no still-relock); cascade runs thro
 
 `SETTLE DUMP`, `SETTLE climb STOPPED`, `MOTION=ALT … action=CUT|ADD|HOLD`, `LAT_HOLD`, `ROLL_RESP`, `validate_forecast: accepted nrmse=…`.
 
-Session micro-trim is local; active `hoverThrottle` stays at `hover_trim` measurement.
+Session micro-trim is local. `hover_trim` writes \(k_h\) and leaves `hoverThrottle` at \(u_{eq}\).
 
 ## Offline smoke
 

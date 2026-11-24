@@ -908,6 +908,7 @@ ExperimentResult runAxisPulse(ExperimentContext& context, const PulseSpec& spec)
         }
     }
     result.model.setVisionMotion(prior.visionMotion());
+    result.model.setVertical(prior.vertical());
     result.model.setSticks(sticks);
     result.model.setBaselineThrottle(measuredHover);
     result.hoverThrottle = measuredHover;
